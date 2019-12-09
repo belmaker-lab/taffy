@@ -8,6 +8,9 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+# 2) FishBase data: Load data from FishBase | Shahar
+
+In this rmd I will create a code that uses a species list and binds it with its min, mean, and max preffered temperature from FishBase.
 
 ```{r}
 # A species list for my for loop code
