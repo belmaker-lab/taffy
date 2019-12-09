@@ -1,0 +1,18 @@
+# A species list for my for loop code
+species=data_cor_all_T$species
+# An empty list to store the output
+data_temp_list=list()
+#For loop code
+for(i in species){
+  #The function from rfishbase that extracts min, mean and max preferred temperature
+  data_temp_list[[i]]=print(rfishbase::estimate(i) %>% select(contains("Temp")))
+}
+data_temp=data.frame(matrix(unlist(data_temp_list), nrow=length(data_temp_list), byrow=T))#Unlist the list to a data frame
+#Rename columns
+data_temp=data_temp %>% 
+  rename(TempPrefMin=X1,
+         TempPrefMean=X2,
+         TempPrefMax=X3)
+
+#Bind species list with temperature data
+data_temp=cbind(species,data_temp) 
