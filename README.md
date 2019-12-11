@@ -8,8 +8,6 @@
    - clean data [bdclean](https://bd-r.github.io/bdclean-guide/)
    - input: species list
    - output: coordinates dataframe
-   
-   sarah
   
 2. **FishBase data**: Load data from FishBase | *Shahar*
    - package [rfishbase](https://github.com/ropensci/rfishbase)
