@@ -30,7 +30,7 @@
    - Create alpha hulls (set smoothness) - Make sure n is sufficient; Overlay with land data and mask with depth
 
 6. **GeoRangeAff**: Affinity by geographical range | *Shira*
-   - input – GetEnv + GeoReange
+   - input – GetEnv + GeoRange
    - output – summary statistics (mean, median, mode, quantiles, SD, range, Probabilities by degrees)
 
 7. **SDMaff** Affinity by SDM | *Itai G. and Yoni*
