@@ -47,3 +47,4 @@
    – From [Cheung's paper](https://www.nature.com/articles/nature12156)
 
 
+> Note: All data has to be projected in WGS-84 `crs("+proj=longlat +datum=WGS84 +no_defs")`
