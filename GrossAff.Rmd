@@ -15,7 +15,7 @@ input – overlay GetCoords + GetEnv
     data frame with species names, lat, lon
 
 output: summary statistics (mean, median, mode, quantiles, SD, range, etc.)
-
+`coords` should be a dataframe of coordinates (lat and lon)
 
 
 
@@ -40,28 +40,20 @@ coords = sp_data %>% select(lon,lat)
 ```
 
 
-Explore layers:
-Create a variable that lists all layers available
-```{r}
-all_bio_layers <- list_layers(datasets = "Bio-ORACLE", marine = TRUE) %>%
-  dplyr::select(layer_code, name)
-
-all_bio_layers %>% filter(stringr::str_detect(.$name, "temperature")) # layers associated with the word 'temperature'
-
-```
-
 Load layers from Bio-Oracle (1) and extract values matching a dataframe of coordinates (2)
 ```{r}
-temp_range <- load_layers(c("BO2_temprange_ss"), datadir = "Bio ORACLE data") # temperature raster for the whole world
-
-range_t <- raster::extract(temp_range[[1]], coords, df = TRUE) # extract according to 'coords' dataframe (lon-lat)
-
-
+list_of_layer_stats <- lapply(names(rasters),function(layer_name) {
+temp <- raster::extract(rasters[[layer_name]], coords, df = TRUE) # extract according to 'coords' dataframe (lon-lat)
+sumdata <- summarytools::descr(temp)
+sumdata = as_tibble(t(sumdata))[1,]
+})
+names(list_of_layer_stats) <- names(rasters)
+stat_dataframe <- bind_rows(list_of_layer_stats,.id = "id") %>% rename(layer = id)
 ```
 
-`coords` should be a dataframe of coordinates (lat and lon)
 
-Note: this code is using an example of one type of temperature layer
+
+
 
 
 summary of the temperature
@@ -69,7 +61,5 @@ summary statistics (mean, median, mode, quantiles, SD, range, etc.)
 
 ```{r}
 library(summarytools)
-mydata <- summarytools::descr(range_t)
-mydata = as.data.frame(mydata)
 ```
 
