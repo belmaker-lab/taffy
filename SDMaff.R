@@ -23,24 +23,35 @@ GetPseudo <- function(Coords, Env, N, prev) {
 #preform SDM
 # Note that this SDM does not perform cross-validation 
 
-SDM <- function(GetCoords, GetEnv, GetPseudo) {
+SDM <- function(Coords, Env, Pseudo) {
   library(dismo)
-  return(maxent(p=GetCoords, x=GetEnv, a=GetPseudo))
+  return(maxent(p=Coords, x=Env, a=Pseudo))
 } 
 
 
 #Extract affinity 
+#temp = enviromental variable to extract, usualy temprature
+SDMaff<-function(SDM(),temp){
+  a = response(SDM,var = temp)
+  Quant=quantile(a[,2])  #returns the 0%    25%    50%    75%   100%  quantiles 
+   CumulativeFunction=ecdf(a[,2])
+   QuantValues=CumulativeFunction(a[ Quant  ,2])
+  Locations=sapply(Quant, function(y)which(abs(a[,2]-y)))
+  Topt = a[which.min(abs(max(a[,2])-a[,2]),1]
+  Tq0 =a[Locations[1],1]
+  Tq25 =a[Locations[2],1]
+  Tq50 =a[Locations[3],1]
+  Tq75 = a[Locations[4],1]
+  Tq100 = a[Locations[5],1]
+  return(temp_C)  
+}
 
-response(var) #var = enviromental predictor for which to calculate the affinity 
 
-response(x, ...)
 
-  SDMaff<-{
-    
-    
-    return(temp_C)  
-    
-  }
+  
+  
+  
+  
   
   
 
