@@ -6,20 +6,16 @@ output: html_document
 editor_options: 
   chunk_output_type: console
 ---
-GetCoords: Download data from GBIF and OBIS  -  Ori and Sarah
-input: species list
-output: coordinates dataframe
-
-
-GetEnv: Load environmental data (e.g. temperature) from Bio-ORACLE and GMED  - | Ori and Sarah
-input: Define a resolution and extent.
-Load environmental layers
 
 
 GrossAff - Gross affinity from GBIF data 
 
 input – overlay GetCoords + GetEnv
+    rasters - 'RasterStack' file, with layers of temperature. The choosen layres writen in "names" raw.(e.g BO_sstmax, BO_sstmean )
+    data frame with species names, lat, lon
+
 output: summary statistics (mean, median, mode, quantiles, SD, range, etc.)
+
 
 
 
