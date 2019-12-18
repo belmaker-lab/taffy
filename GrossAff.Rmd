@@ -1,0 +1,73 @@
+---
+title: "GrossAff"
+author: "Dvora"
+date: "18 12 2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+GrossAff - Gross affinity from GBIF data 
+
+input – overlay GetCoords + GetEnv
+   
+  1.  rasters - 'RasterStack' file, with layers of temperature. The choosen layres writen in "names" raw.(e.g BO_sstmax, BO_sstmean )
+
+  2. data frame with species names, lat, lon
+
+output: summary statistics (mean, median, mode, quantiles, SD, range, etc.)
+
+
+
+
+Load packages
+```{r}
+library(tidyverse)
+library(sdmpredictors)
+library(dismo)
+library(jsonlite)
+
+```
+
+cerate example data, with coordinate for Boops boops.
+the data coords has the coordinate, with "lat" and "lon" column
+`coords` should be a dataframe of coordinates (lat and lon)
+
+
+```{r}
+sp_data = read.csv(file = "sp.data.CSV")
+  sp_data = sp_data %>% filter(species=="Boops boops")
+    coords = sp_data %>% dplyr:: select(lon,lat)
+
+```
+
+
+overlap the coordinates and the temperatures layers from the raster
+and create tible withe the summary for any layer
+
+```{r}
+list_of_layer_stats <- lapply(names(rasters),function(layer_name) {
+  
+  # extract according to 'coords'
+temp <- raster::extract(rasters[[layer_name]], coords, df = TRUE)  dataframe (lon-lat)
+  sumdata <- summarytools::descr(temp)
+  sumdata = as_tibble(t(sumdata))[1,]
+})
+
+names(list_of_layer_stats) <- names(rasters)
+  stat_dataframe <- bind_rows(list_of_layer_stats,.id = "id") %>% rename(layer = id)
+```
+
+
+
+
+
+
+summary of the temperature
+summary statistics (mean, median, mode, quantiles, SD, range, etc.)
+
+```{r}
+library(summarytools)
+```
+
