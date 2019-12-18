@@ -20,8 +20,39 @@ input – overlay GetCoords + GetEnv
 output: summary statistics (mean, median, mode, quantiles, SD, range, etc.)
 
 
+```{r}
+library(dismo)
+library(jsonlite)
+library(tidyverse)
+
+```
+
+
 
 ```{r}
+#need to replace that in the input data
+sstmean <- raster("bio oracle/Present.Surface.Temperature.Mean.asc")
+sstmin <- raster("bio oracle/Present.Surface.Temperature.Min.asc")
+sstmax <- raster("bio oracle/Present.Surface.Temperature.Max.asc")
+sstrange <- raster("bio oracle/Present.Surface.Temperature.Range.asc")
+
+#sp_data = name of the data frames with names of species and coordinate
+lon<-sp_data$lon
+lat<-sp_data$lat
+
+sp.occr.latlon<-as.data.frame(cbind(lon,lat))
+
+sp_meanT <- as.data.frame(extract(sstmean, sp.occr.latlon))
+sp_minT <- as.data.frame(extract(sstmin, sp.occr.latlon))
+sp_maxT <- as.data.frame(extract(sstmax, sp.occr.latlon))
+sp_rangeT <- as.data.frame(extract(sstrange, sp.occr.latlon))
+
+colnames(sp_meanT)<-"T_mean"
+colnames(sp_minT)<-"T_min"
+colnames(sp_maxT)<-"T_max"
+colnames(sp_rangeT)<-"T_range"
+
+sp_data<-cbind(sp_data,sp_meanT,sp_minT,sp_maxT,sp_rangeT)
 
 
 
