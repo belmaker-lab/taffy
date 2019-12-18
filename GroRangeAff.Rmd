@@ -1,0 +1,31 @@
+---
+title: "GeoRangeAff"
+author: "Shira Salingré"
+output: html_document
+---
+
+install required packages and load them
+```{r}
+list.of.packages <- c("tidyverse", "raster", "summarytools")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+library(raster)
+library(summarytools)
+library(tidyverse)
+
+```
+
+`temp` = raster layers from `GetEnv` stage
+`polygon` = convex halls converted to polygons from `GeoRange` stage
+
+```{r}
+summary_gra <- raster::extract(x = temp, y = polygon) %>%
+  as.data.frame() %>%
+  na.omit() %>% 
+  descr(.) %>%
+  as.data.frame()
+
+```
+
+
