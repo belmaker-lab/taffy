@@ -1,0 +1,29 @@
+---
+title: "GrossAff"
+author: "Dvora"
+date: "18 12 2019"
+output: html_document
+---
+GetCoords: Download data from GBIF and OBIS  -  Ori and Sarah
+input: species list
+output: coordinates dataframe
+
+
+GetEnv: Load environmental data (e.g. temperature) from Bio-ORACLE and GMED  - | Ori and Sarah
+input: Define a resolution and extent.
+Load environmental layers
+
+
+GrossAff - Gross affinity from GBIF data 
+
+input – overlay GetCoords + GetEnv
+output: summary statistics (mean, median, mode, quantiles, SD, range, etc.)
+
+
+
+```{r}
+
+
+
+```
+
