@@ -8,11 +8,10 @@
 ########## Define pseudoabsences, uses the the novel three-step method as described in Iturbide et al. (2015) 
 N=10 ##N - number of pseudoAbsences realizations  
 prev = 0.5 #ratio of presences to pseudoAbsences
+library(mopa)
 
 # Define pseudoabsences 
 GetPseudo <- function(Coords, Env, N, prev) {
-  library(mopa)
-  
   bg.profile <- OCSVMprofiling(xy = Coords, varstack = Env)
   bagr.radius <- backgroundRadius(xy = Coords, background = bg.profile$absence,  unit = "decimal degrees") 
   pseudo_TS <- pseudoAbsences(xy = GetCoords, realizations=N, background = bagr.radius, exclusion.buffer = 0.01, prevalence = 0.5)
@@ -28,27 +27,25 @@ SDM <- function(Coords, Env, Pseudo) {
   return(maxent(p=Coords, x=Env, a=Pseudo))
 } 
 
-
 #Extract affinity 
-#temp = enviromental variable to extract, usualy temprature
+#temp = enviromental variable to extract, usualy temperature
 SDMaff<-function(SDM(),temp){
-  a = response(SDM,var = temp)
-  Quant=quantile(a[,2])  #returns the 0%    25%    50%    75%   100%  quantiles 
-   CumulativeFunction=ecdf(a[,2])
-   QuantValues=CumulativeFunction(a[ Quant  ,2])
-  Locations=sapply(Quant, function(y)which(abs(a[,2]-y)))
-  Topt = a[which.min(abs(max(a[,2])-a[,2]),1]
-  Tq0 =a[Locations[1],1]
+  
+  a = as.data.frame(response(SDM,var = temp))
+  a$prob=a$p/sum(a$p)
+  a$cum = cumsum(a$prob)
+  Quant=c(0.1,0.25,0.50,0.75,0.9)
+  Locations=sapply(Quant, function(y)which.min(abs(a[,4]-y)))
+  Topt = a[which.min(abs(max(a$p)-a$p)),1]
+  Tq10 =a[Locations[1],1]
   Tq25 =a[Locations[2],1]
   Tq50 =a[Locations[3],1]
   Tq75 = a[Locations[4],1]
-  Tq100 = a[Locations[5],1]
-  return(temp_C)  
-}
+  Tq90 = a[Locations[5],1]
+  return(temp_C)
+}  
 
 
-
-  
   
   
   
