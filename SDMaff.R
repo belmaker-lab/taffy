@@ -1,11 +1,13 @@
-### Funnctions to perfomr SDMs and calculate species level thermal affinity matrices 
+################ Funnctions to perfomr SDMs and calculate species level thermal affinity matrices 
+#########
+###Major input: GetCoords + GetEnv
+# Coords - data frame of z/ y (long / lat). Output of GetCoords  
+# Env - stacked enviromental layer. Output of GetEnv 
 
-input: GetCoords + GetEnv
 
-# Define pseudoabsences, uses the the novel three-step method as described in Iturbide et al. (2015) 
+########## Define pseudoabsences, uses the the novel three-step method as described in Iturbide et al. (2015) 
 N=10 ##N - number of pseudoAbsences realizations  
 prev = 0.5 #ratio of presences to pseudoAbsences
-# Coords - data frame of z/ y (long / lat) 
 
 GetPseudo <- function(Coords, Env, N, prev) {
   library(mopa)
@@ -17,10 +19,7 @@ GetPseudo <- function(Coords, Env, N, prev) {
   
 }
 
-
-
 #preform SDM
-
 
 SDM <- function(GetCoords, GetEnv, GetPseudo) {
   
@@ -29,7 +28,7 @@ SDM <- function(GetCoords, GetEnv, GetPseudo) {
 
 #Extract affinity 
 
-
+response(bc)
 
   SDMaff<-{
     
@@ -39,23 +38,6 @@ SDM <- function(GetCoords, GetEnv, GetPseudo) {
   }
   
   
-  
-  temp_C <- (temp_F - 32) * 5 / 9
-  return(temp_C)
-  
-  return(temp_C) 
-  
-}
-
-
-
-SDMaff <- function(GetCoords, GetEnv) {
-  
-
-  
-  return(temp_C) 
-  
-}
 
 
 
