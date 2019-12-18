@@ -21,6 +21,7 @@ GetPseudo <- function(Coords, Env, N, prev) {
 }
 
 #preform SDM
+# Note that this SDM does not perform cross-validation 
 
 SDM <- function(GetCoords, GetEnv, GetPseudo) {
   library(dismo)
@@ -30,7 +31,9 @@ SDM <- function(GetCoords, GetEnv, GetPseudo) {
 
 #Extract affinity 
 
-response(bc)
+response(var) #var = enviromental predictor for which to calculate the affinity 
+
+response(x, ...)
 
   SDMaff<-{
     
