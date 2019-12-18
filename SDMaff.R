@@ -52,10 +52,10 @@ SDMaff<-function(SDM,temp){
 N=5 ##N - number of pseudoAbsences realizations  
 prev = 0.5 #ratio of presences to pseudoAbsences
 Affinity=matrix(NA, nrow=N , ncol=6) 
+colnames(Affinity)=c("Topt","Tq10","Tq25","Tq50","Tq75","Tq90")
+
 #temp = enviromental variable to extract, usualy temperature
 
-
-colnames(Affinity)=c("Topt","Tq10","Tq25","Tq50","Tq75","Tq90")
 for (real in 1:N ) {  # loop to go over differnt pseudoAbsences realizations  
   
   pseudo_TS<- GetPseudo(Coords, Env, N, prev)
@@ -64,7 +64,7 @@ for (real in 1:N ) {  # loop to go over differnt pseudoAbsences realizations
   
 } # end of loop to go over differnt pseudoAbsences realizations
 
-FinalAffinity= colMeans(Affinity) # the final climatic affintiy estimate 
+FinalAffinity= colMeans(Affinity) # the final climatic affintiy estimates 
   
   
   
