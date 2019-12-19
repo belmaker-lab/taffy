@@ -23,10 +23,12 @@ output: summary statistics (mean, median, mode, quantiles, SD, range, etc.)
 
 Load packages
 ```{r}
+library(summarytools)
 library(tidyverse)
 library(sdmpredictors)
 library(dismo)
 library(jsonlite)
+
 
 ```
 
@@ -68,6 +70,6 @@ summary of the temperature
 summary statistics (mean, median, mode, quantiles, SD, range, etc.)
 
 ```{r}
-library(summarytools)
+
 ```
 
