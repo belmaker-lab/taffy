@@ -1,0 +1,50 @@
+---
+title: "Cheung_affinity"
+author: "Dvora"
+date: "19 12 2019"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+This function is getting Cheung Temperature affinity. He create table of 991 species from the marine ecosystem (not fish only). 
+
+Chengy paper:
+
+Signature of ocean warming in global fisheries catch (2013)
+https://www.nature.com/articles/nature12156
+
+input:"species" - species name, vector or dataframe, could recieved 1 species name or a vector/data frame with a lot of species names.
+
+output:
+species_tp - data frame with TP50, TP75, TP25 - temperature preference of the species, if it exist in Chueng table.
+If the species doesn't exist, recieved NA
+
+---!!!NOTICE!!!---
+
+If you don't accept temperatue, try synonym names - Chueng table is from 2013...
+
+```{r}
+library(tidyverse)
+
+```
+
+
+
+```{r}
+#upload Chueng data
+ch_data = read.csv(file = "Chueng data clean.csv")
+
+#replace the name of species column, and remove coomon English names
+ch_data = ch_data %>% rename(species = Latin)%>% select(-English)
+
+#convert TP columns to numeric
+ch_data$TP25 = as.numeric(ch_data$TP25)
+ch_data$TP75 = as.numeric(ch_data$TP75)
+
+#left join
+species_tp  = as.data.frame(species)
+species_tp =species_tp %>% left_join(ch_data)
+
+
+```
+
