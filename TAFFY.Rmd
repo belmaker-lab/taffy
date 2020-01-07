@@ -1,0 +1,299 @@
+---
+title: "TAFFY"
+author: "Belmaker Lab"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. **GetCoords**: Download data from [GBIF](https://www.gbif.org/) and [OBIS](https://obis.org/) | *Ori and Sarah*
+   - download coordinate data by species
+   - clean data [bdclean](https://bd-r.github.io/bdclean-guide/)
+   - input: species list
+   - output: coordinates dataframe
+   
+```{r}
+library(spocc)
+library(sdmpredictors)
+library(raster)
+
+#get environmental variables layers from Bio-oracle
+
+rasters <- load_layers(c("BO_sstmax","BO_sstmean"))
+
+#check raster resolution 
+res(rasters)
+
+#aggregate for increasing resulution of grid cell
+aggregate(rasters, fact = 3)
+
+#disaggregate for decreasing resulution of grid cell
+disaggregate(rasters, fact = 4)
+
+#fact = aggregation or disaggregation factor expressed as number of cells in each direction
+
+
+#get coordinates from GBIF by species name
+
+get_sp_coords <- function(species_name, site){
+  if (site == "gbif"){
+    sp=occ(species_name, "gbif", has_coords=TRUE)
+    
+    occs <- (sp$gbif$data[[1]][,2:3])
+    
+    occs$species <- species_name
+    return(occs)
+  }
+}
+
+get_sp_coords("Diplodus sargus", "gbif")
+
+```
+
+  
+2. **FishBase data**: Load data from FishBase | *Shahar*
+   - package [rfishbase](https://github.com/ropensci/rfishbase)
+   - input: species names list
+   - output: temperature range (preferred) + user requirements
+
+This code uses a species list and binds it with its min, mean, and max preffered temperature from FishBase
+
+```{r}
+# A species list for my for loop code
+species=data$species_column
+# An empty list to store the output
+data_fbtemp_list=list()
+#For loop code
+for(i in species){
+  #The function from rfishbase that extracts min, mean and max preferred temperature
+  data_fbtemp_list[[i]]=print(rfishbase::estimate(i) %>% select(contains("Temp")))
+}
+data_temp=data.frame(matrix(unlist(data_fbtemp_list), nrow=length(data_fbtemp_list), byrow=T))#Unlist the list to a data frame
+#Rename columns
+data_temp=data_temp %>% 
+  rename(TempPrefMin=X1,
+         TempPrefMean=X2,
+         TempPrefMax=X3)
+
+#Bind species list with temperature data
+data_temp=cbind(species,data_temp)
+
+```
+
+3. **GetEnv**: Load environmental data (e.g. temperature) from [Bio-ORACLE](http://www.bio-oracle.org/code.php) and [GMED](http://gmed.auckland.ac.nz/) | *Ori and Sarah*
+   - input: Define a resolution and extent.
+   - Load environmental layers
+
+```{r}
+# See 2 chinks up
+
+```
+
+
+4. **GrossAff** - Gross affinity from GBIF data | *Dvora*
+   - input – overlay GetCoords + GetEnv
+   - output: summary statistics (mean, median, mode, quantiles, SD, range, etc.)
+
+```{r}
+library(summarytools)
+library(tidyverse)
+library(sdmpredictors)
+library(dismo)
+library(jsonlite)
+
+# cerate example data, with coordinate for Boops boops.
+# the data coords has the coordinate, with "lat" and "lon" column
+# `coords` should be a dataframe of coordinates (lat and lon)
+
+sp_data = read.csv(file = "sp.data.CSV")
+  sp_data = sp_data %>% filter(species=="Boops boops")
+    coords = sp_data %>% dplyr:: select(lon,lat)
+    
+# overlap the coordinates and the temperatures layers from the raster
+# and create tible withe the summary for any layer
+
+#lapplay loop for overlap and summary
+list_of_layer_stats <- lapply(names(rasters),function(layer_name)
+  
+  {
+  # extract according to 'coords'
+    temp <- raster::extract(rasters[[layer_name]], coords, df = TRUE) 
+      sumdata <- summarytools::descr(temp)
+      sumdata = as_tibble(t(sumdata))[1,]
+  })
+
+#join the names of the layers and convert the list of summaries to 1 data frame, "stat_dataframe"
+  names(list_of_layer_stats) <- names(rasters)
+    stat_dataframe <- bind_rows(list_of_layer_stats,.id = "id") %>%   rename(layer = id) %>% 
+      mutate(Range = Max-Min) #add range collumn
+
+```
+
+5. **GeoRange**: Estimate geographical range | *Yoni*
+   - Create a grid by resolution from GetEnv
+   - input: GetCoords, Fishbase data
+   - Create convex hulls
+   - Create alpha hulls (set smoothness) - Make sure n is sufficient; Overlay with land data and mask with depth
+
+```{r}
+library(dismo)
+# `coords` = from GetCoords stage
+
+convex_hull <- convHull(coords)
+polygon <- polygons(convex_hull)
+
+# alpha hulls?
+
+```
+
+6. **GeoRangeAff**: Affinity by geographical range | *Shira*
+   - input – GetEnv + GeoRange
+   - output – summary statistics (mean, median, mode, quantiles, SD, range, Probabilities by degrees)
+
+```{r}
+library(raster)
+library(summarytools)
+library(tidyverse)
+
+```
+
+`rasters` = raster layers from `GetEnv` stage
+`polygon` = convex halls converted to polygons from `GeoRange` stage
+
+```{r}
+list_of_layer_stats <- lapply(names(rasters), function(layer_name) {
+temp <- raster::extract(rasters[[layer_name]], polygon, df = TRUE) # extract raster values for polygon
+sumdata <- summarytools::descr(temp, stats = "common", transpose = TRUE) # summary statistics for  temperature data
+sumdata = as_tibble(sumdata)[1,]
+})
+names(list_of_layer_stats) <- names(rasters) # names of layers
+stat_dataframe <- bind_rows(list_of_layer_stats,.id = "id") %>% rename(layer = id) # bind all together and create a summary statistics dataframe
+
+
+```
+
+7. **SDMaff** Affinity by SDM | *Itai G. and Yoni*
+   - Define pseudoabsences ([mopa package](https://www.rdocumentation.org/packages/mopa/versions/1.0.1))
+   - Spatial thining
+   - Create SDM (most recent package)
+   - Summary statistics (mean, median, mode, quantiles, SD, range, probability by degrees)
+
+```{r}
+################ Funnctions to perfomr SDMs and calculate species level thermal affinity matrices 
+#########
+###Major input: GetCoords + GetEnv
+# Coords - data frame of z/ y (long / lat). Output of GetCoords  
+# Env - stacked enviromental layer. Output of GetEnv 
+
+
+########## Define pseudoabsences, uses the the novel three-step method as described in Iturbide et al. (2015) 
+ 
+GetPseudo <- function(Coords, Env, N, prev) {
+  library(mopa) 
+  bg.profile <- OCSVMprofiling(xy = Coords, varstack = Env)
+  bagr.radius <- backgroundRadius(xy = Coords, background = bg.profile$absence,  unit = "decimal degrees") 
+  pseudo_TS <- pseudoAbsences(xy = Coords, realizations=N, background = bagr.radius, exclusion.buffer = 0.0166, prevalence = prev)
+  return(pseudo_TS) 
+  }
+
+#preform SDM
+# Note that this SDM does not perform cross-validation 
+
+
+SDM <- function(Coords, Env, Pseudo, real) {
+  library(dismo)
+  return(maxent(p=Coords, x=Env, a=Pseudo[[real]]))
+} 
+
+
+#Extract affinity 
+#temp = enviromental variable to extract, usualy temperature
+# The output is corrently a vector of the Quantiles=c(0.1,0.25,0.50,0.75,0.9)as well as optimal values for the selcte enviroemntal predictor 
+SDMaff<-function(SDM,temp){
+  
+  a = as.data.frame(response(SDM,var = temp))
+  a$prob=a$p/sum(a$p)
+  a$cum = cumsum(a$prob)
+  Quant=c(0.1,0.25,0.50,0.75,0.9)
+  Locations=sapply(Quant, function(y)which.min(abs(a[,4]-y)))
+  Topt = a[which.min(abs(max(a$p)-a$p)),1]
+  Tq10 =a[Locations[1],1]
+  Tq25 =a[Locations[2],1]
+  Tq50 =a[Locations[3],1]
+  Tq75 = a[Locations[4],1]
+  Tq90 = a[Locations[5],1]
+  
+  Values=cbind.data.frame(c("Topt","Tq10","Tq25","Tq50","Tq75","Tq90"),c(Topt,Tq10,Tq25,Tq50,Tq75,Tq90))
+  
+  return(Values)
+}  
+
+
+#### the  actual code to run!!!!
+N=5 ##N - number of pseudoAbsences realizations  
+prev = 0.5 #ratio of presences to pseudoAbsences
+Affinity=matrix(NA, nrow=N , ncol=6) 
+colnames(Affinity)=c("Topt","Tq10","Tq25","Tq50","Tq75","Tq90")
+
+#temp = enviromental variable to extract, usualy temperature
+
+for (real in 1:N ) {  # loop to go over differnt pseudoAbsences realizations  
+  
+  pseudo_TS<- GetPseudo(Coords, Env, N, prev)
+  SDM_output <- SDM(Coords, Env, Pseudo, real) 
+  Affinity[real, ]<-SDMaff(SDM,temp) 
+  
+} # end of loop to go over differnt pseudoAbsences realizations
+
+FinalAffinity= colMeans(Affinity) # the final climatic affintiy estimates 
+
+```
+
+8. **Cheung affinity** | *Dvora and Daphna*
+   – From [Cheung's paper](https://www.nature.com/articles/nature12156)
+This function is getting Cheung Temperature affinity. He create table of 991 species from the marine ecosystem (not fish only). 
+
+Cheng's paper:
+
+Signature of ocean warming in global fisheries catch (2013)
+https://www.nature.com/articles/nature12156
+
+input:"species" - species name, vector or dataframe, could recieved 1 species name or a vector/data frame with a lot of species names.
+
+output:
+species_tp - data frame with TP50, TP75, TP25 - temperature preference of the species, if it exist in Chueng table.
+If the species doesn't exist, recieved NA
+
+---!!!NOTICE!!!---
+
+If you don't accept temperatue, try synonym names - Chueng table is from 2013...
+
+```{r}
+library(tidyverse)
+
+```
+
+
+
+```{r}
+#upload Chueng data
+ch_data = read.csv(file = "Chueng data clean.csv")
+
+#replace the name of species column, and remove coomon English names
+ch_data = ch_data %>% rename(species = Latin)%>% select(-English)
+
+#convert TP columns to numeric
+ch_data$TP25 = as.numeric(ch_data$TP25)
+ch_data$TP75 = as.numeric(ch_data$TP75)
+
+#left join
+species_tp  = as.data.frame(species)
+species_tp =species_tp %>% left_join(ch_data)
+
+
+```
+
+
+> Note: All data has to be projected in WGS-84 `crs("+proj=longlat +datum=WGS84 +no_defs")`
