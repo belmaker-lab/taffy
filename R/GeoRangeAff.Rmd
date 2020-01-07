@@ -1,0 +1,34 @@
+---
+title: "GeoRangeAff"
+author: "Shira Salingré"
+output: html_document
+---
+
+install required packages and load them
+```{r}
+list.of.packages <- c("tidyverse", "raster", "summarytools")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if (length(new.packages)) install.packages(new.packages)
+
+library(raster)
+library(summarytools)
+library(tidyverse)
+
+```
+
+`rasters` = raster layers from `GetEnv` stage
+`polygon` = convex halls converted to polygons from `GeoRange` stage
+
+```{r}
+list_of_layer_stats <- lapply(names(rasters), function(layer_name) {
+temp <- raster::extract(rasters[[layer_name]], polygon, df = TRUE) # extract raster values for polygon
+sumdata <- summarytools::descr(temp, stats = "common", transpose = TRUE) # summary statistics for  temperature data
+sumdata = as_tibble(sumdata)[1,]
+})
+names(list_of_layer_stats) <- names(rasters) # names of layers
+stat_dataframe <- bind_rows(list_of_layer_stats,.id = "id") %>% rename(layer = id) # bind all together and create a summary statistics dataframe
+
+
+```
+
+

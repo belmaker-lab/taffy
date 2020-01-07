@@ -1,0 +1,35 @@
+---
+title: "FishBase_data"
+author: "Shahar Chaikin"
+date: "2019 M12 9"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# 2) FishBase data: Load data from FishBase | Shahar
+
+In this rmd I will create a code that uses a species list and binds it with its min, mean, and max preffered temperature from FishBase.
+
+```{r}
+# A species list for my for loop code
+species=data$species_column
+# An empty list to store the output
+data_fbtemp_list=list()
+#For loop code
+for(i in species){
+  #The function from rfishbase that extracts min, mean and max preferred temperature
+  data_fbtemp_list[[i]]=print(rfishbase::estimate(i) %>% select(contains("Temp")))
+}
+data_temp=data.frame(matrix(unlist(data_fbtemp_list), nrow=length(data_fbtemp_list), byrow=T))#Unlist the list to a data frame
+#Rename columns
+data_temp=data_temp %>% 
+  rename(TempPrefMin=X1,
+         TempPrefMean=X2,
+         TempPrefMax=X3)
+
+#Bind species list with temperature data
+data_temp=cbind(species,data_temp) 
+```
+
