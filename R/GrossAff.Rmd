@@ -17,16 +17,19 @@ input – overlay GetCoords + GetEnv
   2. data frame with species names, lat, lon
 
 output: summary statistics (mean, median, mode, quantiles, SD, range, etc.)
+  "stat_dataframe" - data frame withe the summaries values, any row is temerature layer (mean SST, max SST inc. - the layers chooden at previeos functions)
 
 
 
 
 Load packages
 ```{r}
+library(summarytools)
 library(tidyverse)
 library(sdmpredictors)
 library(dismo)
 library(jsonlite)
+
 
 ```
 
@@ -47,27 +50,21 @@ overlap the coordinates and the temperatures layers from the raster
 and create tible withe the summary for any layer
 
 ```{r}
-list_of_layer_stats <- lapply(names(rasters),function(layer_name) {
+#lapplay loop for overlap and summary
+list_of_layer_stats <- lapply(names(rasters),function(layer_name)
   
+  {
   # extract according to 'coords'
-temp <- raster::extract(rasters[[layer_name]], coords, df = TRUE)  dataframe (lon-lat)
-  sumdata <- summarytools::descr(temp)
-  sumdata = as_tibble(t(sumdata))[1,]
-})
+    temp <- raster::extract(rasters[[layer_name]], coords, df = TRUE) 
+      sumdata <- summarytools::descr(temp)
+      sumdata = as_tibble(t(sumdata))[1,]
+  })
 
-names(list_of_layer_stats) <- names(rasters)
-  stat_dataframe <- bind_rows(list_of_layer_stats,.id = "id") %>% rename(layer = id)
+#join the names of the layers and convert the list of summaries to 1 data frame, "stat_dataframe"
+  names(list_of_layer_stats) <- names(rasters)
+    stat_dataframe <- bind_rows(list_of_layer_stats,.id = "id") %>%   rename(layer = id) %>% 
+      mutate(Range = Max-Min) #add range collumn
+    
 ```
 
-
-
-
-
-
-summary of the temperature
-summary statistics (mean, median, mode, quantiles, SD, range, etc.)
-
-```{r}
-library(summarytools)
-```
 
